@@ -1,5 +1,6 @@
-*.o
-*.rej
-*.orig
+**/*.o
+**/*.orig
+**/*.rej
+.cache
 st
-patches
+

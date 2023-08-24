@@ -5,7 +5,7 @@
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "JetBrainsMono Nerd Font:style=Medium:pixelsize=12:antialias=true:autohint=true";
+static char *font = "JetBrainsMono Nerd Font:style=Medium:pixelsize=14:antialias=true:autohint=true";
 /* Spare fonts */
 static char *font2[] = { "JoyPixels:pixelsize=14:antialias=true:autohint=true", };
 
@@ -182,24 +182,27 @@ static MouseShortcut mshortcuts[] = {
 
 /* Internal keyboard shortcuts. */
 #define MODKEY Mod1Mask
-#define TERMMOD (ControlMask|ShiftMask)
+#define SHIFTKEY ShiftMask
+#define CTRLKEY ControlMask
+#define TERMKEY (CTRLKEY|SHIFTKEY)
+#define SCROLL_INC 3
 
 static Shortcut shortcuts[] = {
 	/* mask                 keysym          function        argument */
 	{ XK_ANY_MOD,           XK_Break,       sendbreak,      {.i =  0} },
-	{ ControlMask,          XK_Print,       toggleprinter,  {.i =  0} },
-	{ ShiftMask,            XK_Print,       printscreen,    {.i =  0} },
+	{ CTRLKEY,              XK_Print,       toggleprinter,  {.i =  0} },
+	{ SHIFTKEY,             XK_Print,       printscreen,    {.i =  0} },
 	{ XK_ANY_MOD,           XK_Print,       printsel,       {.i =  0} },
-	{ TERMMOD,              XK_Prior,       zoom,           {.f = +1} },
-	{ TERMMOD,              XK_Next,        zoom,           {.f = -1} },
-	{ TERMMOD,              XK_Home,        zoomreset,      {.f =  0} },
-	{ TERMMOD,              XK_C,           clipcopy,       {.i =  0} },
-	{ TERMMOD,              XK_V,           clippaste,      {.i =  0} },
-	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },
-	{ ShiftMask,            XK_Insert,      selpaste,       {.i =  0} },
-	{ TERMMOD,              XK_Num_Lock,    numlock,        {.i =  0} },
-	{ ShiftMask,            XK_Page_Up,     kscrollup,      {.i = -1} },
-	{ ShiftMask,            XK_Page_Down,   kscrolldown,    {.i = -1} },
+	{ CTRLKEY,              XK_equal,       zoom,           {.f = +1} },
+	{ CTRLKEY,              XK_minus,       zoom,           {.f = -1} },
+	{ TERMKEY,              XK_0,           zoomreset,      {.f =  0} },
+	{ TERMKEY,              XK_C,           clipcopy,       {.i =  0} },
+	{ TERMKEY,              XK_V,           clippaste,      {.i =  0} },
+	{ TERMKEY,              XK_Y,           selpaste,       {.i =  0} },
+	{ SHIFTKEY,             XK_Insert,      selpaste,       {.i =  0} },
+	{ TERMKEY,              XK_Num_Lock,    numlock,        {.i =  0} },
+	{ TERMKEY,              XK_K,           kscrollup,      {.i =  SCROLL_INC} },
+	{ TERMKEY,              XK_J,           kscrolldown,    {.i =  SCROLL_INC} },
 };
 
 /*
