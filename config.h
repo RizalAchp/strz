@@ -1,13 +1,17 @@
 /* See LICENSE file for copyright and license details. */
-
+#include "st.h"
 /*
  * appearance
  *
  * font: see http://freedesktop.org/software/fontconfig/fontconfig-user.html
  */
-static char *font = "JetBrainsMono Nerd Font:style=Medium:pixelsize=14:antialias=true:autohint=true";
+static char *font =
+    (char *)"JetBrainsMono Nerd "
+            "Font:style=Medium:pixelsize=14:antialias=true:autohint=true";
 /* Spare fonts */
-static char *font2[] = { "JoyPixels:pixelsize=14:antialias=true:autohint=true", };
+static char* font2[] = {
+	(char*)"FontAwesome:size=11:antialias=true:autohint=true",
+};
 
 static int borderpx = 2;
 
@@ -19,14 +23,15 @@ static int borderpx = 2;
  * 4: value of shell in /etc/passwd
  * 5: value of shell in config.h
  */
-static char *shell = "/bin/sh";
-char *utmp = NULL;
+static char* shell = (char*)"/bin/sh";
+char*        utmp  = NULL;
+
 /* scroll program: to enable use a string like "scroll" */
-char *scroll = NULL;
-char *stty_args = "stty raw pass8 nl -echo -iexten -cstopb 38400";
+char* scroll    = NULL;
+char* stty_args = (char*)"stty raw pass8 nl -echo -iexten -cstopb 38400";
 
 /* identification sequence returned in DA and DECID */
-char *vtiden = "\033[?6c";
+char* vtiden = (char*)"\033[?6c";
 
 /* Kerning / character bounding-box multipliers */
 static float cwscale = 1.0;
@@ -37,7 +42,7 @@ static float chscale = 1.0;
  *
  * More advanced example: L" `'\"()[]{}"
  */
-wchar_t *worddelimiters = L" ";
+wchar_t* worddelimiters = (wchar_t*)L" ";
 
 /* selection timeouts (in milliseconds) */
 static unsigned int doubleclicktimeout = 300;
@@ -77,7 +82,7 @@ static unsigned int cursorthickness = 2;
 static int bellvolume = 0;
 
 /* default TERM value */
-char *termname = "st-256color";
+char* termname = (char*)"st-256color";
 
 /*
  * spaces per tab
@@ -95,30 +100,50 @@ char *termname = "st-256color";
  *	stty tabs
  */
 unsigned int tabspaces = 8;
+typedef enum {
+    CN_NORMAL_BLACK = 0,
+    CN_NORMAL_RED,
+    CN_NORMAL_GREEN,
+    CN_NORMAL_YELLOW,
+    CN_NORMAL_BLUE,
+    CN_NORMAL_MAGENTA,
+    CN_NORMAL_CYAN,
+    CN_NORMAL_WHITE,
+    CN_BRIGHT_BLACK = 8,
+    CN_BRIGHT_RED,
+    CN_BRIGHT_GREEN,
+    CN_BRIGHT_YELLOW,
+    CN_BRIGHT_BLUE,
+    CN_BRIGHT_MAGENTA,
+    CN_BRIGHT_CYAN,
+    CN_BRIGHT_WHITE,
+    CN_MAX_256 = 255,
+} ColorName;
 
+// clang-format off
 /* Terminal colors (16 first used in escape sequence) */
 static const char *colorname[] = {
-	/* 8 normal colors */
-	[0] = "#121212", /* hard contrast: #1d2021 / soft contrast: #32302f */
-	[1] = "#cc241d", /* red     */
-	[2] = "#98971a", /* green   */
-	[3] = "#d79921", /* yellow  */
-	[4] = "#458588", /* blue    */
-	[5] = "#b16286", /* magenta */
-	[6] = "#689d6a", /* cyan    */
-	[7] = "#a89984", /* white   */
+    /* 8 normal colors */
+    [CN_NORMAL_BLACK]   = "#121212", /* hard contrast: #1d2021 / soft contrast: #32302f */
+    [CN_NORMAL_RED]     = "#cc241d", /* red     */
+    [CN_NORMAL_GREEN]   = "#98971a", /* green   */
+    [CN_NORMAL_YELLOW]  = "#d79921", /* yellow  */
+    [CN_NORMAL_BLUE]    = "#458588", /* blue    */
+    [CN_NORMAL_MAGENTA] = "#b16286", /* magenta */
+    [CN_NORMAL_CYAN]    = "#689d6a", /* cyan    */
+    [CN_NORMAL_WHITE]   = "#a89984", /* white   */
 
-	/* 8 bright colors */
-	[8]  = "#928374", /* black   */
-	[9]  = "#fb4934", /* red     */
-	[10] = "#b8bb26", /* green   */
-	[11] = "#fabd2f", /* yellow  */
-	[12] = "#83a598", /* blue    */
-	[13] = "#d3869b", /* magenta */
-	[14] = "#8ec07c", /* cyan    */
-	[15] = "#ebdbb2", /* white   */
+    /* 8 bright colors */
+    [CN_BRIGHT_BLACK]   = "#928374",  /* black   */
+    [CN_BRIGHT_RED]     = "#fb4934",  /* red     */
+    [CN_BRIGHT_GREEN]   = "#b8bb26", /* green   */
+    [CN_BRIGHT_YELLOW]  = "#fabd2f", /* yellow  */
+    [CN_BRIGHT_BLUE]    = "#83a598", /* blue    */
+    [CN_BRIGHT_MAGENTA] = "#d3869b", /* magenta */
+    [CN_BRIGHT_CYAN]    = "#8ec07c", /* cyan    */
+    [CN_BRIGHT_WHITE]   = "#ebdbb2", /* white   */
+    [CN_MAX_256] = 0,
 };
-
 
 /*
  * Default colors (colorname index)
@@ -170,14 +195,14 @@ static uint forcemousemod = ShiftMask;
  * Beware that overloading Button1 will disable the selection.
  */
 static MouseShortcut mshortcuts[] = {
-	/* mask                 button   function        argument       release */
-	{ XK_ANY_MOD,           Button4, kscrollup,      {.i = 1},		0, /* !alt */ -1 },
-	{ XK_ANY_MOD,           Button5, kscrolldown,    {.i = 1},		0, /* !alt */ -1 },
-	{ XK_ANY_MOD,           Button2, selpaste,       {.i = 0},      1 },
-	{ ShiftMask,            Button4, ttysend,        {.s = "\033[5;2~"} },
-	{ XK_ANY_MOD,           Button4, ttysend,        {.s = "\031"} },
-	{ ShiftMask,            Button5, ttysend,        {.s = "\033[6;2~"} },
-	{ XK_ANY_MOD,           Button5, ttysend,        {.s = "\005"} },
+	/* mask                 button   function        argument               release         !alt*/
+	{ XK_ANY_MOD,           Button4, kscrollup,      {.i = 1},              0,              -1 },
+	{ XK_ANY_MOD,           Button5, kscrolldown,    {.i = 1},              0,              -1 },
+	{ XK_ANY_MOD,           Button2, selpaste,       {.i = 0},              1,              0 },
+	{ ShiftMask,            Button4, ttysend,        {.s = "\033[5;2~"},    0,              0 },
+	{ XK_ANY_MOD,           Button4, ttysend,        {.s = "\031"},         0,              0 },
+	{ ShiftMask,            Button5, ttysend,        {.s = "\033[6;2~"},    0,              0 },
+	{ XK_ANY_MOD,           Button5, ttysend,        {.s = "\005"},         0,              0 },
 };
 
 /* Internal keyboard shortcuts. */
@@ -454,7 +479,7 @@ static Key key[] = {
 	{ XK_F34,           XK_NO_MOD,      "\033[21;5~",    0,    0},
 	{ XK_F35,           XK_NO_MOD,      "\033[23;5~",    0,    0},
 };
-
+// clang-format on
 /*
  * Selection types' masks.
  * Use the same masks as usual.
@@ -463,7 +488,7 @@ static Key key[] = {
  * If no match is found, regular selection is used.
  */
 static uint selmasks[] = {
-	[SEL_RECTANGULAR] = Mod1Mask,
+    [SEL_RECTANGULAR] = Mod1Mask,
 };
 
 /*
@@ -471,6 +496,6 @@ static uint selmasks[] = {
  * of single wide characters.
  */
 static char ascii_printable[] =
-	" !\"#$%&'()*+,-./0123456789:;<=>?"
-	"@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
-	"`abcdefghijklmnopqrstuvwxyz{|}~";
+    " !\"#$%&'()*+,-./0123456789:;<=>?"
+    "@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"
+    "`abcdefghijklmnopqrstuvwxyz{|}~";

@@ -1,6 +1,7 @@
 #include <X11/Xft/Xft.h>
 #include <hb.h>
 #include <hb-ft.h>
+#include "st.h"
 
 typedef struct {
   hb_buffer_t *buffer;
@@ -10,5 +11,5 @@ typedef struct {
 } HbTransformData;
 
 void hbunloadfonts();
-void hbtransform(HbTransformData *, XftFont *, const Glyph *, int, int);
+void hbtransform(HbTransformData *, XftFont *, const Glyph*, int, int);
 void hbcleanup(HbTransformData *);

@@ -1,6 +1,8 @@
-**/*.o
-**/*.orig
-**/*.rej
-.cache
-st
+/*.o
+/*.orig
+/*.rej
+/*.cache
+/*build
+/*compile_commands.json
+/st
 
