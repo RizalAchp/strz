@@ -10,7 +10,7 @@ static char *font =
             "Font:style=Medium:pixelsize=14:antialias=true:autohint=true";
 /* Spare fonts */
 static char* font2[] = {
-	(char*)"FontAwesome:size=11:antialias=true:autohint=true",
+    (char*)"FontAwesome:size=11:antialias=true:autohint=true",
 };
 
 static int borderpx = 2;
@@ -101,28 +101,33 @@ char* termname = (char*)"st-256color";
  */
 unsigned int tabspaces = 8;
 typedef enum {
-    CN_NORMAL_BLACK = 0,
-    CN_NORMAL_RED,
-    CN_NORMAL_GREEN,
-    CN_NORMAL_YELLOW,
-    CN_NORMAL_BLUE,
-    CN_NORMAL_MAGENTA,
-    CN_NORMAL_CYAN,
-    CN_NORMAL_WHITE,
-    CN_BRIGHT_BLACK = 8,
-    CN_BRIGHT_RED,
-    CN_BRIGHT_GREEN,
-    CN_BRIGHT_YELLOW,
-    CN_BRIGHT_BLUE,
-    CN_BRIGHT_MAGENTA,
-    CN_BRIGHT_CYAN,
-    CN_BRIGHT_WHITE,
-    CN_MAX_256 = 255,
+    CN_NORMAL_BLACK   = 0,
+    CN_NORMAL_RED     = 1,
+    CN_NORMAL_GREEN   = 2,
+    CN_NORMAL_YELLOW  = 3,
+    CN_NORMAL_BLUE    = 4,
+    CN_NORMAL_MAGENTA = 5,
+    CN_NORMAL_CYAN    = 6,
+    CN_NORMAL_WHITE   = 7,
+    CN_BRIGHT_BLACK   = 8,
+    CN_BRIGHT_RED     = 9,
+    CN_BRIGHT_GREEN   = 10,
+    CN_BRIGHT_YELLOW  = 11,
+    CN_BRIGHT_BLUE    = 12,
+    CN_BRIGHT_MAGENTA = 13,
+    CN_BRIGHT_CYAN    = 14,
+    CN_BRIGHT_WHITE   = 15,
+    CN_MAX_256        = 255,
+    CN_CURSOR         = 256,
+    CN_REV_CURSOR     = 257,
+    CN_BG             = 258,
+    CN_FG             = 259,
+    CN_MAX            = 260,
 } ColorName;
 
 // clang-format off
 /* Terminal colors (16 first used in escape sequence) */
-static const char *colorname[] = {
+static char *colorname[CN_MAX] = {
     /* 8 normal colors */
     [CN_NORMAL_BLACK]   = "#121212", /* hard contrast: #1d2021 / soft contrast: #32302f */
     [CN_NORMAL_RED]     = "#cc241d", /* red     */
@@ -143,16 +148,22 @@ static const char *colorname[] = {
     [CN_BRIGHT_CYAN]    = "#8ec07c", /* cyan    */
     [CN_BRIGHT_WHITE]   = "#ebdbb2", /* white   */
     [CN_MAX_256] = 0,
+	/* more colors can be added after 255 to use with DefaultXX */
+	[CN_CURSOR]         = "#add8e6", /* 256 -> cursor */
+	[CN_REV_CURSOR]     = "#555555", /* 257 -> rev cursor*/
+	[CN_BG]             = "#282828", /* 258 -> bg */
+	[CN_FG]             = "#ebdbb2", /* 259 -> fg */
 };
 
 /*
  * Default colors (colorname index)
  * foreground, background, cursor, reverse cursor
  */
-unsigned int defaultfg = 15;
-unsigned int defaultbg = 0;
-unsigned int defaultcs = 15;
-static unsigned int defaultrcs = 257;
+unsigned int defaultfg = CN_FG;
+unsigned int defaultbg = CN_BG;
+unsigned int defaultcs = CN_CURSOR;
+unsigned int defaultrcs = CN_REV_CURSOR;
+unsigned int background = CN_BG;
 
 /*
  * Default shape of cursor
@@ -305,8 +316,8 @@ static Key key[] = {
 	{ XK_KP_Delete,     ControlMask,    "\033[3;5~",    +1,    0},
 	{ XK_KP_Delete,     ShiftMask,      "\033[2K",      -1,    0},
 	{ XK_KP_Delete,     ShiftMask,      "\033[3;2~",    +1,    0},
-	{ XK_KP_Delete,     XK_ANY_MOD,     "\033[P",       -1,    0},
 	{ XK_KP_Delete,     XK_ANY_MOD,     "\033[3~",      +1,    0},
+	{ XK_KP_Delete,     XK_ANY_MOD,     "\033[3~",      -1,    0},
 	{ XK_KP_Multiply,   XK_ANY_MOD,     "\033Oj",       +2,    0},
 	{ XK_KP_Add,        XK_ANY_MOD,     "\033Ok",       +2,    0},
 	{ XK_KP_Enter,      XK_ANY_MOD,     "\033OM",       +2,    0},
@@ -373,7 +384,7 @@ static Key key[] = {
 	{ XK_Delete,        ControlMask,    "\033[3;5~",    +1,    0},
 	{ XK_Delete,        ShiftMask,      "\033[2K",      -1,    0},
 	{ XK_Delete,        ShiftMask,      "\033[3;2~",    +1,    0},
-	{ XK_Delete,        XK_ANY_MOD,     "\033[P",       -1,    0},
+	{ XK_Delete,        XK_ANY_MOD,     "\033[3~",      -1,    0},
 	{ XK_Delete,        XK_ANY_MOD,     "\033[3~",      +1,    0},
 	{ XK_BackSpace,     XK_NO_MOD,      "\177",          0,    0},
 	{ XK_BackSpace,     Mod1Mask,       "\033\177",      0,    0},
@@ -479,6 +490,43 @@ static Key key[] = {
 	{ XK_F34,           XK_NO_MOD,      "\033[21;5~",    0,    0},
 	{ XK_F35,           XK_NO_MOD,      "\033[23;5~",    0,    0},
 };
+
+static xres_pref_t resources[] = {
+	/* name (full)          type (xres_t)       dst */
+    { "st.font",           XRES_STRING,        &font },
+    { "st.fontalt0",       XRES_STRING,        &font2[0] },
+    { "st.color0",         XRES_STRING,        &colorname[CN_NORMAL_BLACK] },
+    { "st.color1",         XRES_STRING,        &colorname[CN_NORMAL_RED] },
+    { "st.color2",         XRES_STRING,        &colorname[CN_NORMAL_GREEN] },
+    { "st.color3",         XRES_STRING,        &colorname[CN_NORMAL_YELLOW] },
+    { "st.color4",         XRES_STRING,        &colorname[CN_NORMAL_BLUE] },
+    { "st.color5",         XRES_STRING,        &colorname[CN_NORMAL_MAGENTA] },
+    { "st.color6",         XRES_STRING,        &colorname[CN_NORMAL_CYAN] },
+    { "st.color7",         XRES_STRING,        &colorname[CN_NORMAL_WHITE] },
+    { "st.color8",         XRES_STRING,        &colorname[CN_BRIGHT_BLACK] },
+    { "st.color9",         XRES_STRING,        &colorname[CN_BRIGHT_RED] },
+    { "st.color10",        XRES_STRING,        &colorname[CN_BRIGHT_GREEN] },
+    { "st.color11",        XRES_STRING,        &colorname[CN_BRIGHT_YELLOW] },
+    { "st.color12",        XRES_STRING,        &colorname[CN_BRIGHT_BLUE] },
+    { "st.color13",        XRES_STRING,        &colorname[CN_BRIGHT_MAGENTA] },
+    { "st.color14",        XRES_STRING,        &colorname[CN_BRIGHT_CYAN] },
+    { "st.color15",        XRES_STRING,        &colorname[CN_BRIGHT_WHITE] },
+    { "st.cursorColor",    XRES_STRING,        &colorname[CN_CURSOR] },
+    { "st.cursorRevColor", XRES_STRING,        &colorname[CN_REV_CURSOR] },
+    { "st.background",     XRES_STRING,        &colorname[CN_BG] },
+    { "st.foreground",     XRES_STRING,        &colorname[CN_FG] },
+    { "st.termname",       XRES_STRING,        &termname },
+    { "st.shell",          XRES_STRING,        &shell },
+    { "st.minlatency",     XRES_INT,           &minlatency },
+    { "st.maxlatency",     XRES_INT,           &maxlatency },
+    { "st.blinktimeout",   XRES_INT,           &blinktimeout },
+    { "st.bellvolume",     XRES_INT,           &bellvolume },
+    { "st.tabspaces",      XRES_INT,           &tabspaces },
+    { "st.borderpx",       XRES_INT,           &borderpx },
+    { "st.cwscale",        XRES_FLOAT,         &cwscale },
+    { "st.chscale",        XRES_FLOAT,         &chscale },
+};
+
 // clang-format on
 /*
  * Selection types' masks.

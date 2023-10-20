@@ -1,8 +1,11 @@
-/*.o
-/*.orig
-/*.rej
-/*.cache
-/*build
-/*compile_commands.json
-/st
+.o
+.orig
+.rej
+.cache
+build
+compile_commands.json
+st
+cb
+cb.old
+
 

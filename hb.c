@@ -30,7 +30,7 @@ static HbFontMatch* hbfontcache = NULL;
  * e. g.
  * FEATURE('c', 'a', 'l', 't'), FEATURE('d', 'l', 'i', 'g')
  */
-hb_feature_t features[] = {};
+hb_feature_t features[] = {0};
 
 void hbunloadfonts() {
     for (int i = 0; i < hbfontslen; i++) {

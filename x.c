@@ -136,6 +136,8 @@ static void  mousereport(XEvent*);
 static char* kmap(KeySym, uint);
 static int   match(uint, uint);
 
+static void load_xresources(void);
+
 static void run(void);
 static void usage(void);
 
@@ -652,23 +654,23 @@ int xloadcolor(int i, const char* name, Color* ncolor) {
 void xloadcols(void) {
     size_t     i;
     static int loaded;
-    Color*     cp;
+    // Color*     cp;
 
-    if (loaded) {
-        for (cp = dc.col; cp < &dc.col[dc.collen]; ++cp)
-            XftColorFree(xw.dpy, xw.vis, xw.cmap, cp);
-    } else {
-        dc.collen = MAX(LEN(colorname), 256);
+    if (!loaded) {
+        dc.collen = 1 + (defaultbg = MAX(LEN(colorname), 256));
         dc.col    = xmalloc(dc.collen * sizeof(Color));
     }
 
-    for (i = 0; i < dc.collen; i++)
+    for (i = 0; i + 1 < dc.collen; i++)
         if (!xloadcolor(i, NULL, &dc.col[i])) {
             if (colorname[i])
                 die("could not allocate color '%s'\n", colorname[i]);
             else
                 die("could not allocate color %d\n", i);
         }
+
+    if (dc.collen) // cannot die, as the color is already loaded.
+        xloadcolor(background, NULL, &dc.col[defaultbg]);
     loaded = 1;
 }
 
@@ -1048,7 +1050,6 @@ void xinit(int cols, int rows) {
     pid_t     thispid = getpid();
     XColor    xmousefg, xmousebg;
 
-    if (!(xw.dpy = XOpenDisplay(NULL))) die("can't open display\n");
     xw.scr = XDefaultScreen(xw.dpy);
     xw.vis = XDefaultVisual(xw.dpy, xw.scr);
 
@@ -1173,7 +1174,7 @@ int xmakeglyphfontspecs(XftGlyphFontSpec* specs, const Glyph* glyphs, int len,
     int      frcflags  = FRC_NORMAL;
     float    runewidth = win.cw;
     Rune     rune;
-    FT_UInt  glyphidx;
+    FT_UInt  glyphidx = 0;
     FcResult fcres;
     FcPattern *     fcpattern, *fontpattern;
     FcFontSet*      fcsets[] = {NULL};
@@ -1778,6 +1779,35 @@ void resize(XEvent* e) {
     cresize(e->xconfigure.width, e->xconfigure.height);
 }
 
+void load_xresources(void) {
+    XrmInitialize();
+    char* resm = XResourceManagerString(xw.dpy);
+    if (!resm) return;
+
+    XrmDatabase db = XrmGetStringDatabase(resm);
+    for (xres_pref_t* p = resources; p < resources + LEN(resources); p++) {
+        char*    type;
+        XrmValue ret;
+        XrmGetResource(db, p->name, "*", &type, &ret);
+        if (ret.addr == NULL || strncmp("String", type, 64)) continue;
+
+        char** sdst = p->dst;
+        int*   idst = p->dst;
+        float* fdst = p->dst;
+        switch (p->type) {
+            case XRES_STRING:
+                *sdst = ret.addr;
+                break;
+            case XRES_INT:
+                *idst = strtoul(ret.addr, NULL, 10);
+                break;
+            case XRES_FLOAT:
+                *fdst = strtof(ret.addr, NULL);
+                break;
+        }
+    }
+}
+
 void run(void) {
     XEvent          ev;
     int             w = win.w, h = win.h;
@@ -1941,6 +1971,9 @@ run:
 
     setlocale(LC_CTYPE, "");
     XSetLocaleModifiers("");
+    if (!(xw.dpy = XOpenDisplay(NULL))) die("Can't open display\n");
+
+    load_xresources();
     cols = MAX(cols, 1);
     rows = MAX(rows, 1);
     tnew(cols, rows);

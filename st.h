@@ -7,6 +7,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
 #include <X11/Xlib.h>
+#include <X11/Xresource.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
 #include <ctype.h>
@@ -199,4 +200,17 @@ extern unsigned int defaultfg;
 extern unsigned int defaultbg;
 extern unsigned int defaultcs;
 #define IGNORE(_ARG) (void)(_ARG)
+
+typedef enum {
+    XRES_STRING = 0,
+    XRES_INT    = 1,
+    XRES_FLOAT  = 2,
+} xres_t;
+
+typedef struct {
+    const char* name;
+    xres_t      type;
+    void*       dst;
+} xres_pref_t;
+
 #endif // define __ST_HEADER__
